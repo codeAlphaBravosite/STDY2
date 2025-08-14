@@ -1,7 +1,7 @@
 // --- START OF FILE sw.js ---
 
-const VERSION = '3.0.1'; // Version matches your app version
-const APP_PREFIX = 'cuet-command-center'; // Unique prefix for this app's caches
+const VERSION = '1.0.2'; // Version matches your app version
+const APP_PREFIX = 'cuet-command-center2'; // Unique prefix for this app's caches
 const CACHE_NAME = `${APP_PREFIX}-v${VERSION}`;
 
 // --- CRITICAL: List of all files needed for the app shell to work offline ---
