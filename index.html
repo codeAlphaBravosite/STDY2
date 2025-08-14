@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css">
+    <link rel="icon" href="./icon-192x192.png" type="image/png">
+    <link rel="shortcut icon" href="./icon-192x192.png" type="image/png">
+    <link rel="apple-touch-icon" href="./icon-192x192.png">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <style>
+        :root {
+            --bg-main: #f8f9fc;
+            --bg-card: #ffffff;
+            --color-primary: #4f46e5;
+            --color-primary-light: #eef2ff;
+            --color-primary-dark: #4338ca;
+            --color-text-main: #1f2937;
+            --color-text-muted: #6b7280;
+            --color-border: #e5e7eb;
+            --color-success: #16a34a;
+            --color-warning: #f59e0b;
+            --color-danger: #dc2626;
+            --color-info: #3b82f6;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--color-text-main); }
+        
+        .dashboard-header { background-color: var(--bg-card); border: 1px solid var(--color-border); }
+        .stat-card { background-color: var(--bg-main); border: 1px solid var(--color-border); transition: all 0.3s ease; }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); border-color: var(--color-primary-light); }
+        .insight-card { transition: all 0.2s ease; }
+        
+        .tab-btn.active { border-color: var(--color-primary); color: var(--color-primary); background-color: var(--bg-card); font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .section-title { transition: background-color 0.3s ease; }
+        .section-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .section-content.active { max-height: 20000px; }
+        
+        .topic-card { background-color: var(--bg-main); border: 1px solid var(--color-border); border-left-width: 4px; transition: all 0.25s ease-out; box-shadow: none; }
+        .topic-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--color-primary-light); background-color: var(--bg-card); }
+        .topic-card.highlighted { border-color: #fde68a; border-left-color: var(--color-warning); background-color: #fffbeb; }
+        .topic-card.completed { border-color: #bbf7d0; border-left-color: var(--color-success); background-color: #f0fdf4; }
+        .topic-card.completed label { text-decoration: line-through; color: var(--color-text-muted); }
+        
+        .topic-details { max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out; }
+        .topic-details.active { max-height: 500px; }
+
+        .custom-checkbox { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border: 2px solid #CBD5E0; border-radius: 4px; position: relative; top: 3px; cursor: pointer; flex-shrink: 0; }
+        .custom-checkbox:checked { background-color: var(--color-success); border-color: var(--color-success); }
+        .custom-checkbox:checked::after { content: '✓'; position: absolute; color: white; font-size: 12px; top: -1px; left: 2px; }
+        .custom-checkbox:indeterminate { background-color: #a5b4fc; border-color: #a5b4fc; }
+        .custom-checkbox:indeterminate::after { content: '-'; position: absolute; color: white; font-size: 14px; font-weight: bold; top: -2px; left: 4px; }
+
+        .progress-bar-bg { background-color: #e5e7eb; }
+        .progress-bar { transition: width 0.5s ease-out; }
+
+        .modal { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .modal.active { display: flex; opacity: 1; }
+        .modal-content { background-color: var(--bg-card); transform: scale(0.95); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal.active .modal-content { transform: scale(1); opacity: 1; }
+    </style>
+</head>
+<body class="text-gray-800 antialiased">
+
+    <div id="modal-container">
+        <div id="deadline-modal" class="modal fixed inset-0 bg-black bg-opacity-60 z-50 justify-center items-center p-4" role="dialog" aria-modal="true" aria-labelledby="deadline-modal-title">
+            <div class="modal-content rounded-xl shadow-2xl p-6 w-full max-w-md">
+                <h2 id="deadline-modal-title" class="text-xl font-bold mb-4 text-gray-800">Set Topic Deadline</h2>
+                <div class="mb-4">
+                    <label for="item-deadline-date" class="block text-sm font-medium text-gray-700 mb-1">Choose a due date</label>
+                    <input type="date" id="item-deadline-date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div class="flex justify-between items-center">
+                    <button class="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md" data-action="removeDeadline">Remove Deadline</button>
+                    <div class="flex space-x-3">
+                        <button class="px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200" data-action="closeModal">Cancel</button>
+                        <button class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold" data-action="saveDeadline">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="dashboard-header rounded-2xl shadow-lg p-6 mb-8">
+            <div class="mb-4">
+                <h1 class="text-3xl font-extrabold tracking-tight text-gray-900">Progress Dashboard</h1>
+            </div>
+            
+            <!-- === CHANGE START: Restructured progress bars for new subjects === -->
+            <div class="mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="stat-card p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1 text-sm"><span class="font-semibold text-gray-600">Physics</span><span id="physics-progress-text" class="font-bold text-gray-800">0%</span></div>
+                        <div class="w-full rounded-full h-2 progress-bar-bg"><div id="physics-progress-bar" class="bg-green-500 h-2 rounded-full progress-bar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="stat-card p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1 text-sm"><span class="font-semibold text-gray-600">Chemistry</span><span id="chemistry-progress-text" class="font-bold text-gray-800">0%</span></div>
+                        <div class="w-full rounded-full h-2 progress-bar-bg"><div id="chemistry-progress-bar" class="bg-blue-500 h-2 rounded-full progress-bar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="stat-card p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1 text-sm"><span class="font-semibold text-gray-600">Mathematics</span><span id="mathematics-progress-text" class="font-bold text-gray-800">0%</span></div>
+                        <div class="w-full rounded-full h-2 progress-bar-bg"><div id="mathematics-progress-bar" class="bg-purple-500 h-2 rounded-full progress-bar" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                     <div class="stat-card p-4 rounded-xl">
+                        <div class="flex justify-between items-center mb-1 text-sm"><span class="font-bold text-gray-800">Overall Progress</span><span id="overall-progress-text" class="font-bold text-gray-800">0%</span></div>
+                        <div class="w-full rounded-full h-2 progress-bar-bg"><div id="overall-progress-bar" class="bg-indigo-600 h-2 rounded-full progress-bar" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- === CHANGE END === -->
+
+            <div id="insights-dashboard" class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center pt-4 border-t border-gray-200">
+                <div class="insight-card p-2 rounded-lg">
+                    <div id="insight-in-progress" class="text-2xl font-bold text-blue-600">0</div>
+                    <div class="text-xs font-semibold text-gray-500">IN PROGRESS</div>
+                </div>
+                <div class="insight-card p-2 rounded-lg">
+                    <div id="insight-completed" class="text-2xl font-bold text-green-600">0</div>
+                    <div class="text-xs font-semibold text-gray-500">COMPLETED</div>
+                </div>
+                 <div class="insight-card p-2 rounded-lg">
+                    <div id="insight-highlighted" class="text-2xl font-bold text-yellow-500">0</div>
+                    <div class="text-xs font-semibold text-gray-500">HIGHLIGHTED</div>
+                </div>
+                <div class="insight-card p-2 rounded-lg">
+                    <div id="insight-overdue" class="text-2xl font-bold text-red-600">0</div>
+                    <div class="text-xs font-semibold text-gray-500">OVERDUE</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sticky top-0 bg-gray-100/80 backdrop-filter backdrop-blur-lg z-10 py-4 mb-6 -mx-4 px-4 border-b border-gray-200">
+             <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="relative w-full sm:w-auto sm:flex-1">
+                    <input type="text" id="search-input" placeholder="Search topics..." class="w-full pl-10 pr-10 py-2 border rounded-full shadow-sm focus:ring-2 focus:ring-indigo-400">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" aria-hidden="true"></i>
+                    <button id="clear-search-btn" class="hidden absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-800" data-action="clearSearch" aria-label="Clear search" title="Clear search">
+                        <i class="fas fa-times-circle" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="flex-shrink-0 flex items-center space-x-2 md:space-x-4">
+                    <!-- === CHANGE START: Updated tabs for new subjects === -->
+                    <div class="bg-white rounded-full p-1 shadow-sm border">
+                        <button class="tab-btn px-4 py-1.5 text-sm rounded-full" data-action="switchTab" data-tab="physics">Physics</button>
+                        <button class="tab-btn px-4 py-1.5 text-sm rounded-full" data-action="switchTab" data-tab="chemistry">Chemistry</button>
+                        <button class="tab-btn px-4 py-1.5 text-sm rounded-full" data-action="switchTab" data-tab="mathematics">Mathematics</button>
+                    </div>
+                    <!-- === CHANGE END === -->
+                </div>
+            </div>
+        </div>
+
+        <div id="syllabus-content">
+            <!-- Syllabus will be dynamically generated here by JavaScript -->
+        </div>
+        
+    </div>
+    
+<script>
+// === CUET ULTIMATE COMMAND CENTER SCRIPT v2.7 (Subject Update) ===
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // === CHANGE START: Replaced syllabus data with Physics, Chemistry, Mathematics ===
+    const syllabus = {
+        physics: [
+            { sectionId: 'phy-electrostatics', title: 'I. Electrostatics', topics: [ { id: 'phy-topic-electrostatics', title: 'Electrostatics', details: ["Electric charges and fields, Coulomb's Law, electric dipoles.", "Gauss's theorem and its applications, electric potential and potential energy, equipotential surfaces.", "Conductors and insulators, dielectrics, capacitors, and the Van de Graaff generator."] } ] },
+            { sectionId: 'phy-current-electricity', title: 'II. Current Electricity', topics: [ { id: 'phy-topic-current-electricity', title: 'Current Electricity', details: ["Electric current, drift velocity, Ohm's law, resistance and conductivity.", "Temperature dependence of resistance, cells (internal resistance, emf, combinations).", "Kirchhoff's laws, Wheatstone bridge, Meter Bridge, and the potentiometer."] } ] },
+            { sectionId: 'phy-magnetic-effects', title: 'III. Magnetic Effects of Current and Magnetism', topics: [ { id: 'phy-topic-magnetic-effects', title: 'Magnetic Effects', details: ["Magnetic fields (Oersted's experiment, Biot - Savart law, Ampere's law).", "Forces on charges and conductors in magnetic fields (cyclotron), torque on current loops, moving coil galvanometers.", "Magnetic dipoles, Earth's magnetic field, magnetic properties of materials (para-, dia-, and ferromagnetic).", "Electromagnets, and permanent magnets."] } ] },
+            { sectionId: 'phy-emi-ac', title: 'IV. Electromagnetic Induction & AC', topics: [ { id: 'phy-topic-emi-ac', title: 'EMI & Alternating Currents', details: ["Electromagnetic induction (Faraday's law, Lenz's Law, Eddy currents), self and mutual inductance.", "Alternating currents (rms value, reactance, impedance), LC oscillations.", "LCR series circuit, resonance, power in AC circuits, and AC generators and transformers."] } ] },
+            { sectionId: 'phy-em-waves', title: 'V. Electromagnetic Waves', topics: [ { id: 'phy-topic-em-waves', title: 'Electromagnetic Waves', details: ["Need for displacement current, characteristics of EM waves, their transverse nature.", "The electromagnetic spectrum with elementary facts about their uses."] } ] },
+            { sectionId: 'phy-optics', title: 'VI. Optics', topics: [ { id: 'phy-topic-ray-optics', title: 'Ray Optics and Optical Instruments', details: ["Reflection and refraction of light, spherical mirrors and lenses, total internal reflection.", "Optical fibres, dispersion, scattering, human eye, and optical instruments like microscopes and telescopes."] }, { id: 'phy-topic-wave-optics', title: 'Wave Optics', details: ["Wavefronts, Huygens' Principle, interference (Young's double slit experiment).", "Diffraction, resolving power of optical instruments, and polarization (Brewster's law, uses of polarized light)."] } ] },
+            { sectionId: 'phy-dual-nature', title: 'VII. Dual Nature of Matter and Radiation', topics: [ { id: 'phy-topic-dual-nature', title: 'Dual Nature of Matter', details: ["Photoelectric effect (Einstein's equation).", "Matter waves (de Broglie relation), and the Davisson-Germer experiment."] } ] },
+            { sectionId: 'phy-atoms-nuclei', title: 'VIII. Atoms and Nuclei', topics: [ { id: 'phy-topic-atoms-nuclei', title: 'Atoms and Nuclei', details: ["Rutherford's and Bohr's atomic models, hydrogen spectrum.", "Nuclear composition and size, atomic masses, isotopes, isobars, isotones.", "Radioactivity (alpha, beta, gamma decay), radioactive decay law.", "Mass-energy relation, mass defect, binding energy, nuclear fission, and fusion."] } ] },
+            { sectionId: 'phy-electronic-devices', title: 'IX. Electronic Devices', topics: [ { id: 'phy-topic-electronic-devices', title: 'Semiconductor Electronics', details: ["Energy bands in solids, semiconductor diodes (I-V characteristics, rectification, LED, photodiode, solar cell, Zener diode).", "Junction transistors (action, characteristics, amplifier, oscillator).", "Logic gates (OR, AND, NOT, NAND, NOR)."] } ] },
+            { sectionId: 'phy-comm-systems', title: 'X. Communication Systems (Potentially Deleted)', topics: [ { id: 'phy-topic-comm-systems', title: 'Communication Systems', details: ["Elements of a communication system, bandwidth of signals and transmission media.", "Propagation of electromagnetic waves, need for modulation.", "Production and detection of amplitude-modulated waves."] } ] }
+        ],
+        chemistry: [
+            { sectionId: 'chem-physical', title: 'I. Physical Chemistry', topics: [ { id: 'chem-solutions', title: 'Solutions', details: ["Types of solutions, expression of concentration of solutions of solids in liquids.", "Solubility of gases in liquids, solid solutions, colligative properties - relative lowering of vapour pressure, Raoult's law.", "Elevation of B.P., depression of freezing point, osmotic pressure, determination of molecular masses using colligative properties."] }, { id: 'chem-electrochemistry', title: 'Electrochemistry', details: ["Redox reactions, conductance in electrolytic solutions, specific and molar conductivity.", "Variations of conductivity with concentration, Kohlrausch's Law, electrolysis and laws of electrolysis.", "Dry cell-electrolytic cells and Galvanic cells, lead accumulator, EMF of a cell, standard electrode potential.", "Nernst equation and its application to chemical cells, Relation between Gibbs energy change and EMF of a cell, fuel cells, corrosion."] }, { id: 'chem-kinetics', title: 'Chemical Kinetics', details: ["Rate of a reaction (average and instantaneous), factors affecting rates of reaction: concentration, temperature, catalyst.", "Order and molecularity of a reaction, rate law and specific rate constant, integrated rate equations and half-life (only for zero and first order reactions).", "Concept of collision theory (elementary idea, no mathematical treatment), activation energy, Arrhenius equation."] } ] },
+            { sectionId: 'chem-inorganic', title: 'II. Inorganic Chemistry', topics: [ { id: 'chem-d-f-block', title: 'd and f Block Elements', details: ["General introduction, electronic configuration, occurrence and characteristics of transition metals, general trends in properties of the first row transition metals.", "Metallic character, ionization enthalpy, oxidation states, ionic radii, colour, catalytic property, magnetic properties, interstitial compounds, alloy formation.", "Preparation and properties of K2Cr2O7 and KMnO4.", "Lanthanoids - electronic configuration, oxidation states, chemical reactivity and lanthanoid contraction and its consequences.", "Actinoids - Electronic configuration, oxidation states and comparison with lanthanoids."] }, { id: 'chem-coordination', title: 'Coordination Compounds', details: ["Introduction, ligands, coordination number, colour, magnetic properties and shapes.", "IUPAC nomenclature of mononuclear coordination compounds.", "Bonding, Werner's theory, VBT, and CFT; structure and stereoisomerism.", "Importance of coordination compounds (in qualitative analysis, extraction of metals and biological systems)."] } ] },
+            { sectionId: 'chem-organic', title: 'III. Organic Chemistry', topics: [ { id: 'chem-haloalkanes', title: 'Haloalkanes and Haloarenes', details: ["Haloalkanes: Nomenclature, nature of C-X bond, physical and chemical properties, mechanism of substitution reactions (SN1, SN2).", "Haloarenes: Nature of C-X bond, substitution reactions (directive influence of halogen for monosubstituted compounds only).", "Uses and environmental effects of - dichloromethane, trichloromethane, tetrachloromethane, iodoform, freons, DDT."] }, { id: 'chem-alcohols-phenols', title: 'Alcohols, Phenols and Ethers', details: ["Alcohols: Nomenclature, methods of preparation, physical and chemical properties (of primary alcohols only), identification of primary, secondary and tertiary alcohols, mechanism of dehydration, uses with special reference to methanol and ethanol.", "Phenols: Nomenclature, methods of preparation, physical and chemical properties, acidic nature of phenol, electrophilic substitution reactions, uses of phenols.", "Ethers: Nomenclature, methods of preparation, physical and chemical properties, uses."] }, { id: 'chem-aldehydes-ketones', title: 'Aldehydes, Ketones and Carboxylic Acids', details: ["Aldehydes and Ketones: Nomenclature, nature of carbonyl group, methods of preparation, physical and chemical properties, mechanism of nucleophilic addition, reactivity of alpha hydrogen in aldehydes; uses.", "Key reactions include Aldol and Cannizzaro reaction.", "Carboxylic Acids: Nomenclature, acidic nature, methods of preparation, physical and chemical properties; uses."] }, { id: 'chem-amines', title: 'Amines', details: ["Nomenclature, classification, structure, methods of preparation, physical and chemical properties, uses, identification of primary, secondary and tertiary amines.", "Diazonium salts: Preparation, chemical reactions and importance in synthetic organic chemistry."] }, { id: 'chem-biomolecules', title: 'Biomolecules', details: ["Carbohydrates - Classification (aldoses and ketoses), monosaccharides (glucose and fructose), D-L configuration, oligosaccharides, polysaccharides, importance.", "Proteins - Elementary idea of alpha-amino acids, peptide bond, polypeptides, proteins, structure of proteins, denaturation of proteins.", "Hormones - Elementary idea (excluding structure).", "Vitamins - Classification and functions.", "Nucleic Acids: DNA and RNA."] } ] }
+        ],
+        mathematics: [
+            { sectionId: 'math-relations-functions', title: 'I. Relations and Functions', topics: [ { id: 'math-relations-functions-topic', title: 'Relations and Functions', details: ["Types of relations: reflexive, symmetric, transitive and equivalence relations.", "One to one and onto functions, composite functions, inverse of a function."] }, { id: 'math-inverse-trig', title: 'Inverse Trigonometric Functions', details: ["Definition, range, domain, principal value branch.", "Graphs of inverse trigonometric functions.", "Elementary properties of inverse trigonometric functions."] } ] },
+            { sectionId: 'math-algebra', title: 'II. Algebra', topics: [ { id: 'math-matrices', title: 'Matrices', details: ["Concept, notation, order, equality, types of matrices, zero and identity matrix.", "Transpose of a matrix, symmetric and skew symmetric matrices.", "Operation on matrices: Addition, multiplication and multiplication with a scalar.", "Simple properties of addition, multiplication and scalar multiplication.", "Existence of non-zero matrices whose product is the zero matrix.", "Concept of elementary row and column operations.", "Invertible matrices and proof of the uniqueness of inverse, if it exists."] }, { id: 'math-determinants', title: 'Determinants', details: ["Determinant of a square matrix (up to 3 x 3 matrices), properties of determinants, minors, co-factors.", "Applications of determinants in finding the area of a triangle.", "Adjoint and inverse of a square matrix.", "Consistency, inconsistency and number of solutions of system of linear equations by examples, solving system of linear equations in two or three variables using inverse of a matrix."] } ] },
+            { sectionId: 'math-calculus', title: 'III. Calculus', topics: [ { id: 'math-continuity-differentiability', title: 'Continuity and Differentiability', details: ["Continuity and differentiability, derivative of composite functions, chain rule.", "Derivatives of inverse trigonometric functions, derivative of implicit functions.", "Concept of exponential and logarithmic functions.", "Derivatives of logarithmic and exponential functions.", "Logarithmic differentiation, derivative of functions expressed in parametric forms.", "Second order derivatives. Rolle’s and Lagrange’s Mean Value Theorems (without proof) and their geometric interpretation."] }, { id: 'math-app-derivatives', title: 'Applications of Derivatives', details: ["Applications of derivatives: rate of change of bodies, increasing/decreasing functions, tangents and normals.", "Use of derivatives in approximation, maxima and minima (first derivative test motivated geometrically and second derivative test given as a provable tool).", "Simple problems (that illustrate basic principles and understanding of the subject as well as real-life situations)."] }, { id: 'math-integrals', title: 'Integrals', details: ["Integration as inverse process of differentiation.", "Integration of a variety of functions by substitution, by partial fractions and by parts.", "Evaluation of simple integrals of standard forms.", "Definite integrals as a limit of a sum, Fundamental Theorem of Calculus (without proof).", "Basic properties of definite integrals and evaluation of definite integrals."] }, { id: 'math-app-integrals', title: 'Applications of Integrals', details: ["Applications in finding the area under simple curves, especially lines, circles/parabolas/ellipses (in standard form only).", "Area between any of the two above said curves (the region should be clearly identifiable)."] }, { id: 'math-diff-equations', title: 'Differential Equations', details: ["Definition, order and degree, general and particular solutions of a differential equation.", "Formation of differential equation whose general solution is given.", "Solution of differential equations by method of separation of variables, solutions of homogeneous differential equations of first order and first degree.", "Solutions of linear differential equation of the type: dy/dx + py = q and dx/dy + px = q."] } ] },
+            { sectionId: 'math-vectors-3d', title: 'IV. Vectors and 3D Geometry', topics: [ { id: 'math-vectors', title: 'Vectors', details: ["Vectors and scalars, magnitude and direction of a vector.", "Direction cosines and direction ratios of a vector.", "Types of vectors (equal, unit, zero, parallel and collinear vectors), position vector of a point, negative of a vector, components of a vector.", "Addition of vectors, multiplication of a vector by a scalar, position vector of a point dividing a line segment in a given ratio.", "Scalar (dot) product of vectors, vector (cross) product of vectors.", "Scalar triple product of vectors."] }, { id: 'math-3d-geometry', title: 'Three-dimensional Geometry', details: ["Direction cosines and direction ratios of a line joining two points.", "Cartesian equation and vector equation of a line, coplanar and skew lines, shortest distance between two lines.", "Cartesian and vector equation of a plane.", "Angle between (i) two lines, (ii) two planes, (iii) a line and a plane.", "Distance of a point from a plane."] } ] },
+            { sectionId: 'math-lp', title: 'V. Linear Programming', topics: [ { id: 'math-lp-topic', title: 'Linear Programming', details: ["Introduction, related terminology such as constraints, objective function, optimization.", "Different types of linear programming (L.P.) problems.", "Mathematical formulation of L.P. problems.", "Graphical method of solution for problems in two variables, feasible and infeasible regions (bounded and unbounded).", "Feasible and infeasible solutions, optimal feasible solutions (up to three non-trivial constraints)."] } ] },
+            { sectionId: 'math-probability', title: 'VI. Probability', topics: [ { id: 'math-probability-topic', title: 'Probability', details: ["Conditional probability, multiplication theorem on probability.", "Independent events, total probability, Baye’s theorem.", "Random variable and its probability distribution, mean and variance of random variable.", "Repeated independent (Bernoulli) trials and Binomial distribution."] } ] }
+        ]
+    };
+    // === CHANGE END ===
+
+    const App = {
+        state: {
+            topics: {},
+            expanded: {},
+            topicDetailsExpanded: {},
+            activeTab: 'physics', // Changed default tab
+            searchTerm: '',
+            activeModal: null,
+            activeModalId: null,
+            elementToFocusOnClose: null,
+            debounceTimer: null,
+        },
+        
+        init() {
+            this.loadState();
+            this.renderLayoutShell();
+            this.renderVisibleContent();
+            this.attachEventListeners();
+        },
+        
+        loadState() {
+            this.state.topics = this.getFromStorage('topics') || {};
+            this.state.expanded = this.getFromStorage('expanded') || {};
+            this.state.topicDetailsExpanded = this.getFromStorage('topicDetailsExpanded') || {};
+            this.state.activeTab = this.getFromStorage('activeTab') || 'physics'; // Changed default tab
+
+            Object.values(syllabus).flat().forEach(section => {
+                section.topics.forEach(topic => {
+                    if (!this.state.topics[topic.id]) {
+                        this.state.topics[topic.id] = { completed: false, deadline: null, highlighted: false };
+                    }
+                });
+            });
+            this.saveState('topics', this.state.topics);
+        },
+        
+        saveState(key, data) { localStorage.setItem(`cuet_app_v2.2_${key}`, JSON.stringify(data)); },
+        getFromStorage(key) { const data = localStorage.getItem(`cuet_app_v2.2_${key}`); return data ? JSON.parse(data) : null; },
+
+        helpers: {
+            getTodayInIST() {
+                const now = new Date();
+                const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+                return new Date(Date.UTC(istTime.getUTCFullYear(), istTime.getUTCMonth(), istTime.getUTCDate()));
+            },
+
+            getTodayInISTStringForInput() {
+                const todayIST = this.getTodayInIST();
+                const year = todayIST.getUTCFullYear();
+                const month = String(todayIST.getUTCMonth() + 1).padStart(2, '0');
+                const day = String(todayIST.getUTCDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            },
+
+            getDeadlineStatus(deadlineString, completed) {
+                if (completed) {
+                    return { html: `<span class="text-green-600"><i class="fas fa-check-circle mr-1" aria-hidden="true"></i>Completed</span>`, isOverdue: false };
+                }
+                if (!deadlineString) {
+                    return { html: '', isOverdue: false };
+                }
+
+                const todayIST = this.getTodayInIST();
+                const deadlineDate = new Date(deadlineString + 'T00:00:00Z');
+
+                const diffTime = deadlineDate.getTime() - todayIST.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                const formattedDeadline = deadlineDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+                if (diffDays < 0) {
+                    return { html: `<span class="text-red-600 font-bold" title="Deadline was ${formattedDeadline}"><i class="fas fa-calendar-times mr-1" aria-hidden="true"></i>Overdue</span>`, isOverdue: true };
+                }
+                if (diffDays === 0) {
+                    return { html: `<span class="text-red-500 font-bold" title="Deadline is today!"><i class="fas fa-exclamation-circle mr-1" aria-hidden="true"></i>Due Today</span>`, isOverdue: false };
+                }
+                if (diffDays <= 7) {
+                    return { html: `<span class="text-yellow-600" title="Deadline is ${formattedDeadline}"><i class="fas fa-hourglass-half mr-1" aria-hidden="true"></i>Due in ${diffDays} day${diffDays > 1 ? 's' : ''}</span>`, isOverdue: false };
+                }
+                const shortFormat = deadlineDate.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+                return { html: `<span class="text-gray-500" title="Deadline is ${formattedDeadline}"><i class="fas fa-calendar-check mr-1" aria-hidden="true"></i>Due ${shortFormat}</span>`, isOverdue: false };
+            },
+        },
+
+        actions: {
+            updateAndRender(updateFn) {
+                updateFn();
+                App.renderVisibleContent();
+            },
+            toggleComplete: (id) => App.actions.updateAndRender(() => {
+                App.state.topics[id].completed = !App.state.topics[id].completed;
+                App.saveState('topics', App.state.topics);
+            }),
+            toggleHighlight: (id) => App.actions.updateAndRender(() => {
+                App.state.topics[id].highlighted = !App.state.topics[id].highlighted;
+                App.saveState('topics', App.state.topics);
+            }),
+            toggleSectionComplete: (sectionId) => App.actions.updateAndRender(() => {
+                const section = Object.values(syllabus).flat().find(s => s.sectionId === sectionId);
+                if (!section) return;
+                const sectionTopics = section.topics.map(t => t.id);
+                const allCompleted = sectionTopics.every(id => App.state.topics[id].completed);
+                sectionTopics.forEach(id => { App.state.topics[id].completed = !allCompleted; });
+                App.saveState('topics', App.state.topics);
+            }),
+            toggleTopicDetails: (id) => {
+                App.state.topicDetailsExpanded[id] = !App.state.topicDetailsExpanded[id];
+                App.saveState('topicDetailsExpanded', App.state.topicDetailsExpanded);
+                App.renderVisibleContent();
+            },
+            toggleSection: (id) => {
+                App.state.expanded[id] = !App.state.expanded[id];
+                App.saveState('expanded', App.state.expanded);
+                App.toggleSectionUI(id, App.state.expanded[id]);
+            },
+            switchTab: (tab) => {
+                App.state.activeTab = tab;
+                App.saveState('activeTab', App.state.activeTab);
+                App.renderVisibleContent();
+            },
+            openDeadline: (id) => {
+                App.state.activeModalId = id;
+                App.openModal('deadline-modal');
+                const modal = document.getElementById('deadline-modal');
+                const dateInput = modal.querySelector('#item-deadline-date');
+                const topicData = Object.values(syllabus).flat().flatMap(s => s.topics).find(t => t.id === id);
+                
+                modal.querySelector('#deadline-modal-title').textContent = `Set Deadline for: ${topicData.title}`;
+                dateInput.value = App.state.topics[id].deadline || '';
+                
+                dateInput.min = App.helpers.getTodayInISTStringForInput();
+            },
+            saveDeadline: () => {
+                const id = App.state.activeModalId;
+                if (!id) return;
+                App.actions.updateAndRender(() => {
+                   App.state.topics[id].deadline = document.getElementById('item-deadline-date').value;
+                   App.saveState('topics', App.state.topics);
+                });
+                App.closeAllModals();
+            },
+            removeDeadline: () => {
+                const id = App.state.activeModalId;
+                if (!id) return;
+                App.actions.updateAndRender(() => {
+                    App.state.topics[id].deadline = null;
+                    App.saveState('topics', App.state.topics);
+                });
+                App.closeAllModals();
+            },
+            closeModal: () => App.closeAllModals(),
+            searchTopics: (term) => {
+                App.state.searchTerm = term.toLowerCase().trim();
+                App.renderVisibleContent();
+            },
+            clearSearch: () => {
+                const searchInput = document.getElementById('search-input');
+                searchInput.value = '';
+                App.actions.searchTopics('');
+                document.getElementById('clear-search-btn').classList.add('hidden');
+                searchInput.focus();
+            },
+        },
+
+        renderLayoutShell() {
+            const createSectionHTML = (section) => `
+                <div class="section-container bg-white rounded-2xl shadow-lg mb-6 border border-gray-200/60 overflow-hidden" data-section-id="${section.sectionId}">
+                    <div class="section-title px-6 py-4 flex justify-between items-center cursor-pointer border-b border-transparent" data-action="toggleSection" data-id="${section.sectionId}">
+                        <div class="flex items-center">
+                            <input type="checkbox" class="custom-checkbox mr-4" data-action="toggleSectionComplete" data-id="${section.sectionId}" aria-label="Mark all in ${section.title} as complete">
+                            <h2 class="text-xl font-bold text-gray-800 pointer-events-none">${section.title}</h2>
+                            <span class="section-progress-text text-base font-medium text-gray-400 ml-3 transition-colors" data-section-id="${section.sectionId}"></span>
+                        </div>
+                        <i class="fas fa-chevron-down transform transition-transform duration-300 shrink-0 text-gray-500 pointer-events-none" aria-hidden="true"></i>
+                    </div>
+                    <div class="section-content p-2 sm:p-4"></div>
+                </div>`;
+            const syllabusContent = document.getElementById('syllabus-content');
+            // === CHANGE START: Updated tab container divs ===
+            syllabusContent.innerHTML = `<div id="tab-physics" class="tab-content"></div><div id="tab-chemistry" class="tab-content"></div><div id="tab-mathematics" class="tab-content"></div>`;
+            // === CHANGE END ===
+            Object.keys(syllabus).forEach(paperKey => {
+                const tabContainer = document.getElementById(`tab-${paperKey}`);
+                if (tabContainer) {
+                    tabContainer.innerHTML = syllabus[paperKey].map(createSectionHTML).join('');
+                }
+            });
+        },
+
+        renderVisibleContent() {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === this.state.activeTab));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.toggle('active', content.id === `tab-${this.state.activeTab}`));
+            
+            const paperKey = this.state.activeTab; // Simplified as tab name now matches syllabus key
+            
+            if (syllabus[paperKey]) {
+                syllabus[paperKey].forEach(section => {
+                    const hasMatches = this.renderSectionTopics(section);
+                    const isExpanded = this.state.searchTerm ? hasMatches : (this.state.expanded[section.sectionId] || false);
+                    this.toggleSectionUI(section.sectionId, isExpanded);
+                });
+            }
+            
+            this.updateAllProgress();
+        },
+
+        renderSectionTopics(section) {
+            const contentEl = document.querySelector(`.section-container[data-section-id="${section.sectionId}"] .section-content`);
+            if(!contentEl) return false;
+
+            let topicsToRender = [...section.topics];
+
+            if (this.state.searchTerm) {
+                topicsToRender = topicsToRender.filter(topic =>
+                    topic.title.toLowerCase().includes(this.state.searchTerm) ||
+                    topic.details.join(' ').toLowerCase().includes(this.state.searchTerm)
+                );
+            }
+
+            const topicsHTML = topicsToRender.map(topic => {
+                const topicState = this.state.topics[topic.id];
+                const isDetailsExpanded = this.state.topicDetailsExpanded[topic.id];
+                return this.createTopicHTML(topic, topicState, isDetailsExpanded);
+            }).join('');
+
+            contentEl.innerHTML = topicsHTML || (this.state.searchTerm ? `<div class="p-4 text-center text-gray-500">No topics match your search.</div>` : '');
+            
+            return topicsToRender.length > 0;
+        },
+
+        createTopicHTML(topic, topicState, isDetailsExpanded) {
+            const { id, title, details } = topic;
+            const { completed, highlighted, deadline } = topicState;
+            
+            const deadlineStatus = this.helpers.getDeadlineStatus(deadline, completed);
+            const deadlineHTML = deadlineStatus.html;
+
+            const cardClasses = `topic-card p-4 rounded-lg mb-3 ${completed ? 'completed' : ''} ${highlighted ? 'highlighted' : ''}`;
+            const detailsClasses = `pl-7 mt-1 topic-details ${isDetailsExpanded ? 'active' : ''}`;
+
+            return `
+            <div class="${cardClasses}" data-id="${id}">
+                <div class="flex justify-between items-start gap-3">
+                    <button class="flex items-start mr-3 flex-grow text-left" data-action="toggleComplete" data-id="${id}">
+                        <input type="checkbox" class="custom-checkbox mr-3 pointer-events-none" id="${id}" ${completed ? 'checked' : ''} tabindex="-1">
+                        <div class="flex-grow">
+                             <label for="${id}" class="font-bold cursor-pointer text-gray-800">${title}</label>
+                        </div>
+                    </button>
+                    <div class="flex items-center space-x-3 text-gray-400 flex-shrink-0">
+                         <div class="deadline-status text-xs font-medium">${deadlineHTML}</div>
+                         <button class="hover:text-blue-500 ${deadline ? 'text-blue-500' : ''}" aria-label="Set Topic Deadline" title="Set Topic Deadline" data-action="openDeadline" data-id="${id}"><i class="fas fa-calendar-alt" aria-hidden="true"></i></button>
+                         <button class="hover:text-yellow-500 ${highlighted ? 'text-yellow-400' : ''}" aria-label="Highlight Topic" title="Highlight Topic" data-action="toggleHighlight" data-id="${id}"><i class="fas fa-star" aria-hidden="true"></i></button>
+                    </div>
+                </div>
+                <div class="pl-7">
+                    <button class="text-left text-xs text-indigo-500 hover:underline" data-action="toggleTopicDetails" data-id="${id}">${isDetailsExpanded ? 'hide details' : 'show details'}</button>
+                </div>
+                <div class="${detailsClasses}">
+                    <ul class="text-sm text-gray-600 list-disc list-outside space-y-2 ml-5 leading-relaxed pt-2 border-t border-gray-200 mt-2">
+                        ${details.map(detail => `<li>${detail}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>`;
+        },
+
+        updateAllProgress() {
+            let overallCompleted = 0, overallTotal = 0, completedCount = 0, overdue = 0, highlighted = 0, inProgress = 0;
+            const allTopics = Object.values(syllabus).flatMap(p => p).flatMap(s => s.topics);
+            overallTotal = allTopics.length;
+
+            allTopics.forEach(topic => {
+                const state = this.state.topics[topic.id];
+                if (state.completed) {
+                    overallCompleted++;
+                    completedCount++;
+                } else {
+                    inProgress++;
+                    if (state.highlighted) highlighted++;
+                    const deadlineStatus = this.helpers.getDeadlineStatus(state.deadline, state.completed);
+                    if (deadlineStatus.isOverdue) {
+                        overdue++;
+                    }
+                }
+            });
+
+            // === CHANGE START: Updated subject keys for progress bars ===
+            ['physics', 'chemistry', 'mathematics'].forEach(paper => {
+            // === CHANGE END ===
+                if (syllabus[paper]) { // Check if the paper exists in the syllabus
+                    const paperTopics = syllabus[paper].flatMap(s => s.topics);
+                    const paperCompleted = paperTopics.filter(t => this.state.topics[t.id]?.completed).length;
+                    const percent = paperTopics.length > 0 ? Math.round((paperCompleted / paperTopics.length) * 100) : 0;
+                    
+                    const progressBar = document.getElementById(`${paper}-progress-bar`);
+                    const progressText = document.getElementById(`${paper}-progress-text`);
+                    
+                    if (progressBar) progressBar.style.width = `${percent}%`;
+                    if (progressText) progressText.textContent = `${percent}%`;
+                }
+            });
+            
+            const overallPercent = overallTotal > 0 ? Math.round((overallCompleted / overallTotal) * 100) : 0;
+            document.getElementById(`overall-progress-bar`).style.width = `${overallPercent}%`;
+            document.getElementById(`overall-progress-text`).textContent = `${overallPercent}%`;
+            
+            Object.values(syllabus).flat().forEach(section => {
+                const completedInSection = section.topics.filter(t => this.state.topics[t.id]?.completed).length;
+                const totalInSection = section.topics.length;
+                const progressEl = document.querySelector(`.section-progress-text[data-section-id="${section.sectionId}"]`);
+                if(progressEl) progressEl.textContent = `(${completedInSection}/${totalInSection})`;
+                const sectionCheckbox = document.querySelector(`.section-title input[data-id="${section.sectionId}"]`);
+                if (sectionCheckbox) {
+                    sectionCheckbox.checked = completedInSection === totalInSection && totalInSection > 0;
+                    sectionCheckbox.indeterminate = completedInSection > 0 && completedInSection < totalInSection;
+                }
+            });
+
+            document.getElementById('insight-overdue').textContent = overdue;
+            document.getElementById('insight-completed').textContent = completedCount;
+            document.getElementById('insight-highlighted').textContent = highlighted;
+            document.getElementById('insight-in-progress').textContent = inProgress;
+        },
+
+        attachEventListeners() {
+            document.body.addEventListener('click', (e) => {
+                const target = e.target.closest('[data-action]');
+                if (!target) return;
+                e.preventDefault();
+                const { action, id, tab } = target.dataset;
+                if (this.actions[action]) {
+                    this.actions[action](id || tab);
+                }
+            });
+            document.getElementById('search-input').addEventListener('input', e => {
+                const term = e.target.value;
+                document.getElementById('clear-search-btn').classList.toggle('hidden', term.length === 0);
+                clearTimeout(this.state.debounceTimer);
+                this.state.debounceTimer = setTimeout(() => this.actions.searchTopics(term), 200);
+            });
+        },
+        
+        toggleSectionUI(id, forceState) {
+            const title = document.querySelector(`.section-title[data-id="${id}"]`);
+            if (!title) return;
+            const content = title.nextElementSibling;
+            const icon = title.querySelector('i');
+            content.classList.toggle('active', forceState);
+            icon.classList.toggle('rotate-180', forceState);
+            title.classList.toggle('border-b-gray-200', forceState);
+        },
+        
+        openModal(modalId) {
+            this.state.elementToFocusOnClose = document.activeElement;
+            this.state.activeModal = document.getElementById(modalId);
+            if(this.state.activeModal) {
+                this.state.activeModal.classList.add('active');
+                const firstFocusable = this.state.activeModal.querySelector('input, button');
+                if (firstFocusable) firstFocusable.focus();
+            }
+        },
+        closeAllModals() {
+            if(this.state.activeModal) this.state.activeModal.classList.remove('active');
+            if(this.state.elementToFocusOnClose) this.state.elementToFocusOnClose.focus();
+            this.state.activeModal = null;
+            this.state.activeModalId = null;
+            this.state.elementToFocusOnClose = null;
+        },
+    };
+
+    App.init();
+});
+</script>    
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration => {
+          console.log('Service Worker registered successfully:', registration.scope);
+        })
+        .catch(error => {
+          console.log('Service Worker registration failed:', error);
+        });
+    });
+  }
+    </script>
+</body>
+</html>
