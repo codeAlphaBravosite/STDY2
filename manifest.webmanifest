@@ -1,7 +1,7 @@
 {
-  "name": "Syllabook",
-  "short_name": "Syllabook",
-  "description": "Syllabook",
+  "name": "Syllabook2",
+  "short_name": "Syllabook2",
+  "description": "Syllabook2",
   "start_url": "./index.html",
   "scope": ".",
   "display": "standalone",
